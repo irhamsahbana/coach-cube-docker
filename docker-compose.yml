@@ -1,0 +1,68 @@
+version: '3.7'
+
+services:
+  cube_be:
+    build:
+      args:
+        user: cube
+        uid: 1000
+      context: ./be-landing
+      dockerfile: ../be.dockerfile
+    image: cube/be:latest
+    container_name: cube-be
+    restart: always
+    volumes:
+      - ./be-landing:/app-be
+      # - ./configs/supervisor/prod-conf.d/prod-supervisor.conf:/etc/supervisor/supervisord.conf
+      - ../coach-cube-volumes/logs/supervisor:/var/log/cube
+    networks:
+      - cube
+    depends_on:
+     - cube_mariadb
+  
+  cube_fe:
+    build:
+      context: ./coachcube-landing-page
+      dockerfile: ../fe.dockerfile
+    volumes:
+      - ../coach-cube-volumes/staticbuild:/app-fe
+    networks:
+      - cube
+
+  cube_nginx:
+    image: nginx:stable-alpine
+    container_name: cube-nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./configs/nginx/prod-conf.d:/etc/nginx/conf.d
+      - ./be-landing:/app-be
+      - /etc/letsencrypt:/etc/letsencrypt
+      - ../coach-cube-volumes/logs/nginx:/var/log/nginx
+    networks:
+      - cube
+    depends_on:
+      - cube_be
+
+  cube_mariadb:
+    image: mariadb:10.7
+    container_name: cube-mariadb
+    restart: always
+    volumes:
+      - ./configs/mysql/conf.d:/etc/mysql/conf.d
+      - ../coach-cube-volumes/logs/mariadb:/var/log/mysql
+      - ../coach-cube-volumes/database:/var/lib/mysql
+    env_file:
+      - .env
+    healthcheck:
+      test: [ 'CMD', 'mysqladmin', 'ping', '-u', 'root', '-p${MARIADB_ROOT_PASSWORD}' ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cube
+
+networks:
+  cube: {}
