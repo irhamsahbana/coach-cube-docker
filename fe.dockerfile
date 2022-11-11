@@ -14,13 +14,16 @@ WORKDIR /app-fe
 
 COPY --from=builder /app-fe/node_modules ./node_modules
 COPY --from=builder /app-fe/package.json ./package.json
+COPY ./ ./
 
-COPY . .
+RUN npm install
 
 RUN chown -R node:node .
+
+RUN npm run build
 
 USER node
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]

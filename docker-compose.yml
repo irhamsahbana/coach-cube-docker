@@ -20,14 +20,17 @@ services:
     depends_on:
      - cube_mariadb
   
-  cube_fe:
-    build:
-      context: ./coachcube-landing-page
-      dockerfile: ../fe.dockerfile
-    volumes:
-      - ../coach-cube-volumes/staticbuild:/app-fe
-    networks:
-      - cube
+  # cube_fe:
+  #   build:
+  #     context: ./coachcube-landing-page
+  #     dockerfile: ../fe.dockerfile
+  #   image: cube/fe:latest
+  #   container_name: cube-fe
+  #   restart: always
+  #   # volumes:
+  #   #   - ../coach-cube-volumes/staticbuild:/app-fe
+  #   networks:
+  #     - cube
 
   cube_nginx:
     image: nginx:stable-alpine
